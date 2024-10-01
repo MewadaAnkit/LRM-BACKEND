@@ -1,7 +1,7 @@
 const express = require('express');
 const router =new express.Router();
 const { UserRegister , UserLogin} = require('../controllers/AuthController')
-const { uploadToSpecificFolder , getFiles } = require('../controllers/User.controller')
+const {getFiles } = require('../controllers/User.controller')
 
 
 // Register Route 
@@ -12,7 +12,7 @@ router.post('/api/v1/user/login', UserLogin);
 
 
 // upload records route
-router.post('/api/v1/user/upload-records' , uploadToSpecificFolder)
+// router.post('/api/v1/user/upload-records' , uploadToSpecificFolder)
 
 
 // get files route 

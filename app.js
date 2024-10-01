@@ -8,15 +8,16 @@ const cookieParser = require('cookie-parser')
 const UserRoutes = require('./src/routes/user.routes.js')
 const AdminRoutes = require('./src/routes/admin.routes.js')
 const bodyParser = require('body-parser')
+const path = require('path')
 //Middlewares
 app.use(cors({
     origin : process.env.FRONTEND_URL,
     credentials : true
 }))
 
-
+app.use('/cdn', express.static(path.join(__dirname, 'cdn')));
 app.use(express.json());
-app.use(express.urlencoded({extended:false}))
+app.use(express.urlencoded({extended:true}))
 app.use(cookieParser())
 
 
