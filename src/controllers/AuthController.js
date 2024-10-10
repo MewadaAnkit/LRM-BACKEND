@@ -1,6 +1,7 @@
 const User = require('../models/user.model')
 const jwt = require('jsonwebtoken')
 const Admin = require('../models/admin.model.js')
+
 const formatDate = (date) => {
     const yyyy = date.getFullYear();
     const mm = String(date.getMonth() + 1).padStart(2, '0');
@@ -115,18 +116,18 @@ const UserLogin = async (req, res) => {
         
         const isMobile = /^[0-9]{10}$/.test(username);
         console.log(isMobile)
-        let user;
+        let user1;
 
         if (isMobile) {
             // If it's a mobile number, perform User login
-            user = await User.findOne({ mobile: username , password});
-            if (!user) {
+            user1 = await User.findOne({ mobile: username , password});
+            if (!user1) {
                 return res.status(400).json({ message: 'Invalid mobile number or password.' });
             }
         } else {
             // If it's not a mobile number, perform Admin login (by username)
-            user = await Admin.findOne({ username: username , password });
-            if (!user) {
+            user1 = await Admin.findOne({ username: username , password });
+            if (!user1) {
                 return res.status(400).json({ message: 'Invalid username or password.' });
             }
         }
@@ -134,11 +135,11 @@ const UserLogin = async (req, res) => {
        
         const token = jwt.sign(
             {
-                id: user.id,    
-                _id:user._id,     
-                username: user.username,
-                mobile: user.mobile,
-                role: user.role     
+                id: user1.id,    
+                _id:user1._id,     
+                username: user1.username,
+                mobile: user1.mobile,
+                role: user1.role     
             },
             process.env.JWT_SECRET,
             { expiresIn: '1h' }  // Token expires in 1 hour
@@ -147,16 +148,16 @@ const UserLogin = async (req, res) => {
         // Prepare response data
         const userdata = {
             token: token,
-            userId: user._id,
-            id: user.id,
-            role: user.role,
-            username: user.username
+            userId: user1._id,
+            id: user1.id,
+            role: user1.role,
+            username: user1.username
         };
 
         // Send back token and user info
         res.status(200).json({
             message: 'Login successful!',
-            userdata
+            user:userdata
         });
     } catch (error) {
         console.error('Error during login:', error);

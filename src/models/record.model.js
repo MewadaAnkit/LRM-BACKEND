@@ -2,20 +2,18 @@ const mongoose = require('mongoose');
 
 const documentSchema = new mongoose.Schema({
     id:{type:String},
-    file1Path: String,  
-    file2Path: String,  
-    file3Path: String,  
-    file4Path: String,  
+   registry_papers: String,  
+    other_docs: String,  
     farmerName: String,
     farmerMobile:String,
     farmerEmail:String,
     buyerName:String,
-    buyerMobile:String,
     khasraNumber: String,
     villageName: String,
-    mobileNumber: String,
-    dateOfRegistration: Date,
+    dateOfRegistration: String,
     plotNumber: String,
+    lastUpdateBy:{type:String},
+    lastUpdateDate:{type:String},
     uploadedBy: { type:String},  
     uploadDate: { type: String }  
 },{timestamps:true});

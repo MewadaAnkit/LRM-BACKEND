@@ -4,18 +4,18 @@ const activityLogSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId, // Assuming you have User model
         ref: 'User',
-        required: true
+       
     },
     action: {
         type: String,
-        required: true
+       
     },
     description: {
         type: String,
-        required: true
+      
     },
     timestamp: {
-        type: Date,
+        type: String,
         default: Date.now
     }
 } ,{timestamps:true});

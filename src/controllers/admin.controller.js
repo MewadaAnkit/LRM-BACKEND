@@ -105,6 +105,7 @@ const DeletUR = async(req,res)=>{
 }
 
 
+
 // Deactive UR
 const Deactivate = async(req,res)=>{
     try {
@@ -162,11 +163,11 @@ const Reactivate = async(req,res)=>{
 
 
 
-
+// User Metrics 
 const getMetrics = async (req, res) => {
     try {
-      const totalDocs = await Document.countDocuments();
-      const recentDocs = await Document.countDocuments({ createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } });
+      const totalDocs = await Record.countDocuments();
+      const recentDocs = await Record.countDocuments({ createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } });
       const totalUsers = await User.countDocuments();
   
       res.json({ totalDocs, recentDocs, totalUsers });
@@ -178,6 +179,82 @@ const getMetrics = async (req, res) => {
 
 
 
+// delete records 
+const deleteRecord = async (req, res) => {
+    try {
+        const { id } = req.params; 
+
+        
+        const deletedRecord = await Record.findByIdAndDelete(id);
+
+        if (!deletedRecord) {
+            return res.status(404).json({ message: 'Record not found' });
+        }
+
+      
+        return res.status(200).json({
+            message: 'Record deleted successfully',
+            data: deletedRecord
+        });
+    } catch (error) {
+       
+        return res.status(500).json({
+            message: 'An error occurred while deleting the record',
+            error: error.message
+        });
+    }
+};
 
 
-module.exports = {}
+
+
+
+
+
+
+
+const Search = async(req,res)=>{
+    try {
+        const { searchQuery } = req.query;
+    
+   
+        if (!searchQuery) {
+          return res.status(200).json([]);
+        }
+    
+       
+        const regex = new RegExp(searchQuery, 'i'); 
+       
+        const query = {
+          $or: [
+            { farmerName: regex },
+            { khasraNumber: regex },
+            { villageName: regex },
+            { farmerMobile: regex },
+            { plotNumber: regex }
+          ]
+        };
+    
+       
+        const records = await Record.find(query);
+    
+      
+        res.status(200).json(records);
+      } catch (error) {
+        res.status(500).json({ message: 'Error searching documents', error });
+      }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+module.exports = {Search}

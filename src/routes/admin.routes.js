@@ -6,7 +6,7 @@ const User = require('../models/user.model')
 const multer = require('multer')
 const fs = require('fs');
 const path = require('path');
-
+const { Search} = require('../controllers/admin.controller')
 
 const formatDate = (date) => {
   const yyyy = date.getFullYear();
@@ -34,16 +34,15 @@ const upload = multer({ storage: memoryStorage });
 
 router.post('/upload', upload.fields([
   { name: 'registry_papers', maxCount: 1 },
-  { name: 'adhaar_card_farmer', maxCount: 1 },
-  { name: 'agreement_papers', maxCount: 1 },
-  { name: 'khasra_book', maxCount: 1 }
+  { name: 'other_docs', maxCount: 1 },
+ 
 ]), async (req, res, next) => {
 
-  const { userId, userName } = req.body;
+  const { userId, farmerName,farmerMobile,farmerEmail } = req.body;
 
-  if (!userId || !userName) {
-    return res.status(400).json({ message: 'User ID and User Name are required!' });
-  }
+  // if (!userId || !userName) {
+  //   return res.status(400).json({ message: 'User ID and User Name are required!' });
+  // }
 
   try {
    
@@ -84,17 +83,23 @@ router.post('/upload', upload.fields([
 
     fs.writeFileSync(path.join(uploadPath, fileName), file.buffer);
   });
-
+                        
   try {
   
     const newRecord = new Record({
-      id: recordId, // Generated record ID
-      file1Path: `/cdn/${recordId}/registry_papers.pdf`,
-      file2Path: `/cdn/${recordId}/adhaar_card_farmer.pdf`,
-      file3Path: `/cdn/${recordId}/agreement_papers.pdf`,
-      file4Path: `/cdn/${recordId}/khasra_book.pdf`,
+      id: recordId,
+      registry_papers: `/cdn/${recordId}/registry_papers.pdf`,
+      other_docs: `/cdn/${recordId}/other_docs.pdf`,
       uploadedBy: req.body.userId,
-      userName: req.body.userName,
+      farmerName: req.body.farmerName,
+      farmerEmail: req.body.farmerEmail || null,
+      farmerMobile: req.body.farmerMobile,
+      khasraNumber: req.body.khasraNumber,
+      villageName: req.body.villageName,
+      plotNumber:req.body.plotNumber,
+      dateOfRegistration:req.body.dateOfRegistration,
+      lastUpdateBy:"",
+      lastUpdateDate:"",
       uploadDate: formatDate(new Date()), 
     });
 
@@ -119,11 +124,7 @@ router.post('/upload', upload.fields([
 
 
 
-
-
-
-
-
+   
 
 
 router.get('/api/records', async (req, res) => {
@@ -174,10 +175,8 @@ router.get('/api/records/detail', async (req, res) => {
     const filePaths = records.map(record => ({
       recordId: record.id,
       // farmerName:farmerName,
-      file1Path: record.file1Path,
-      file2Path: record.file2Path,
-      file3Path: record.file3Path,
-      file4Path: record.file4Path,
+      registry_papers: record.file1Path,
+      other_docs: record.file2Path,
       uploadedBy: record.uploadedBy,
       uploadDate: record.uploadDate,
     }));
@@ -192,159 +191,226 @@ router.get('/api/records/detail', async (req, res) => {
 
 
 
-router.get('/api/records/doc', async (req, res) => {
-  const { recordId } = req.query;
+// router.get('/api/records/doc', async (req, res) => {
+//   const { recordId } = req.query;
 
-  try {
-    const filter = {}; 
+//   try {
+//     const filter = {}; 
 
-    if (recordId) {
-      filter.id = recordId;
+//     if (recordId) {
+//       filter.id = recordId;
 
-      // Fetch records based on the filter
-      const records = await Record.find(filter);
+//       // Fetch records based on the filter
+//       const records = await Record.find(filter);
 
-      // If no records found
-      if (records.length === 0) {
-        return res.status(404).json({ message: 'No records found' });
-      }
+//       // If no records found
+//       if (records.length === 0) {
+//         return res.status(404).json({ message: 'No records found' });
+//       }
 
-      // Define the base URL for the CDN
-      const baseUrl = 'http://localhost:8000';
+//       // Define the base URL for the CDN
+//       const baseUrl = 'http://localhost:8000';
 
     
-      const filePaths = records.map(record => {
-        const files = [];
-        if (record.file1Path) {
-          files.push({
-            name: 'file1',
-            url: `${baseUrl}${record.file1Path}`,
-            type: path.extname(record.file1Path).replace('.', '')
-          });
-        }
-        if (record.file2Path) {
-          files.push({
-            name: 'file2',
-            url: `${baseUrl}${record.file2Path}`,
-            type: path.extname(record.file2Path).replace('.', '')
-          });
-        }
-        if (record.file3Path) {
-          files.push({
-            name: 'file3',
-            url: `${baseUrl}${record.file3Path}`,
-            type: path.extname(record.file3Path).replace('.', '')
-          });
-        }
-        if (record.file4Path) {
-          files.push({
-            name: 'file4',
-            url: `${baseUrl}${record.file4Path}`,
-            type: path.extname(record.file4Path).replace('.', '')
-          });
-        }
+//       const filePaths = records.map(record => {
+//         const files = [];
+//         if (record.file1Path) {
+//           files.push({
+//             name: 'file1',
+//             url: `${baseUrl}${record.file1Path}`,
+//             type: path.extname(record.file1Path).replace('.', '')
+//           });
+//         }
+//         if (record.file2Path) {
+//           files.push({
+//             name: 'file2',
+//             url: `${baseUrl}${record.file2Path}`,
+//             type: path.extname(record.file2Path).replace('.', '')
+//           });
+//         }
+//         if (record.file3Path) {
+//           files.push({
+//             name: 'file3',
+//             url: `${baseUrl}${record.file3Path}`,
+//             type: path.extname(record.file3Path).replace('.', '')
+//           });
+//         }
+//         if (record.file4Path) {
+//           files.push({
+//             name: 'file4',
+//             url: `${baseUrl}${record.file4Path}`,
+//             type: path.extname(record.file4Path).replace('.', '')
+//           });
+//         }
 
-        return files;
-      });
+//         return files;
+//       });
 
 
-      const flattenedFilePaths = filePaths.flat();
+//       const flattenedFilePaths = filePaths.flat();
 
-      res.status(200).json(flattenedFilePaths);
-    }
+//       res.status(200).json(flattenedFilePaths);
+//     }
     
-    }catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Failed to fetch records', error: error.message });
-    }
-  });
+//     }catch (error) {
+//       console.error(error);
+//       res.status(500).json({ message: 'Failed to fetch records', error: error.message });
+//     }
+//   });
 
 
 
 
+
+
+  // router.put('/update/:recordId', upload.fields([
+  //   { name: 'registry_papers', maxCount: 1 },
+  //   { name: 'other_docs', maxCount: 1 },
+    
+  // ]), async (req, res) => {
+  
+  //   const { recordId } = req.params;
+  //   const { userId, userName } = req.body;
+  
+  //   if (!userId || !userName) {
+  //     return res.status(400).json({ message: 'User ID and User Name are required!' });
+  //   }
+  
+  //   try {
+  //     // Find the existing record by recordId
+  //     const existingRecord = await Record.findOne({ id: recordId });
+  
+  //     if (!existingRecord) {
+  //       return res.status(404).json({ message: 'Record not found!' });
+  //     }
+  
+  //     const uploadPath = path.join(__dirname, `../../cdn/${recordId}`);
+      
+  //     // Ensure the upload directory exists
+  //     if (!fs.existsSync(uploadPath)) {
+  //       return res.status(500).json({ message: 'Directory for record does not exist!' });
+  //     }
+  
+  //     const updateData = {
+       
+  //       userName: req.body.userName,
+  //       lastUpdateBy:req.body.userId,
+  //       uploadDate: formatDate(new Date()), 
+  //     };
+  
+  //     // Update only the specific documents that are being uploaded by the user
+  //     if (req.files['registry_papers']) {
+  //       const registryPaper = req.files['registry_papers'][0];
+  //       const registryFileName = `registry_papers${path.extname(registryPaper.originalname)}`;
+  //       fs.writeFileSync(path.join(uploadPath, registryFileName), registryPaper.buffer);
+  //       updateData.file1Path = `/cdn/${recordId}/${registryFileName}`;
+  //     }
+  
+  //     if (req.files['adhaar_card_farmer']) {
+  //       const adhaarCard = req.files['adhaar_card_farmer'][0];
+  //       const adhaarFileName = `adhaar_card_farmer${path.extname(adhaarCard.originalname)}`;
+  //       fs.writeFileSync(path.join(uploadPath, adhaarFileName), adhaarCard.buffer);
+  //       updateData.file2Path = `/cdn/${recordId}/${adhaarFileName}`;
+  //     }
+  
+     
+  
+  //     // Update the record in the database with only the new data
+  //     const updatedRecord = await Record.findOneAndUpdate({ id: recordId }, updateData, { new: true });
+  
+  //     if (!updatedRecord) {
+  //       return res.status(404).json({ message: 'Record not found for update!' });
+  //     }
+  
+  //     res.status(200).json({
+  //       message: 'Record updated successfully!',
+  //       updatedRecord
+  //     });
+  
+  //   } catch (error) {
+  //     console.error(error);
+  //     res.status(500).json({ message: 'Failed to update record', error: error.message });
+  //   }
+  // });
 
 
   router.put('/update/:recordId', upload.fields([
     { name: 'registry_papers', maxCount: 1 },
-    { name: 'adhaar_card_farmer', maxCount: 1 },
-    { name: 'agreement_papers', maxCount: 1 },
-    { name: 'khasra_book', maxCount: 1 }
-  ]), async (req, res) => {
-  
+    { name: 'other_docs', maxCount: 1 },
+]), async (req, res) => {
+
     const { recordId } = req.params;
     const { userId, userName } = req.body;
-  
+
     if (!userId || !userName) {
-      return res.status(400).json({ message: 'User ID and User Name are required!' });
+        return res.status(400).json({ message: 'User ID and User Name are required!' });
     }
-  
+
     try {
-      // Find the existing record by recordId
-      const existingRecord = await Record.findOne({ id: recordId });
-  
-      if (!existingRecord) {
-        return res.status(404).json({ message: 'Record not found!' });
-      }
-  
-      const uploadPath = path.join(__dirname, `../../cdn/${recordId}`);
-      
-      // Ensure the upload directory exists
-      if (!fs.existsSync(uploadPath)) {
-        return res.status(500).json({ message: 'Directory for record does not exist!' });
-      }
-  
-      const updateData = {
-        uploadedBy: req.body.userId,
-        userName: req.body.userName,
-        uploadDate: formatDate(new Date()), 
-      };
-  
-      // Update only the specific documents that are being uploaded by the user
-      if (req.files['registry_papers']) {
-        const registryPaper = req.files['registry_papers'][0];
-        const registryFileName = `registry_papers${path.extname(registryPaper.originalname)}`;
-        fs.writeFileSync(path.join(uploadPath, registryFileName), registryPaper.buffer);
-        updateData.file1Path = `/cdn/${recordId}/${registryFileName}`;
-      }
-  
-      if (req.files['adhaar_card_farmer']) {
-        const adhaarCard = req.files['adhaar_card_farmer'][0];
-        const adhaarFileName = `adhaar_card_farmer${path.extname(adhaarCard.originalname)}`;
-        fs.writeFileSync(path.join(uploadPath, adhaarFileName), adhaarCard.buffer);
-        updateData.file2Path = `/cdn/${recordId}/${adhaarFileName}`;
-      }
-  
-      if (req.files['agreement_papers']) {
-        const agreementPaper = req.files['agreement_papers'][0];
-        const agreementFileName = `agreement_papers${path.extname(agreementPaper.originalname)}`;
-        fs.writeFileSync(path.join(uploadPath, agreementFileName), agreementPaper.buffer);
-        updateData.file3Path = `/cdn/${recordId}/${agreementFileName}`;
-      }
-  
-      if (req.files['khasra_book']) {
-        const khasraBook = req.files['khasra_book'][0];
-        const khasraFileName = `khasra_book${path.extname(khasraBook.originalname)}`;
-        fs.writeFileSync(path.join(uploadPath, khasraFileName), khasraBook.buffer);
-        updateData.file4Path = `/cdn/${recordId}/${khasraFileName}`;
-      }
-  
-      // Update the record in the database with only the new data
-      const updatedRecord = await Record.findOneAndUpdate({ id: recordId }, updateData, { new: true });
-  
-      if (!updatedRecord) {
-        return res.status(404).json({ message: 'Record not found for update!' });
-      }
-  
-      res.status(200).json({
-        message: 'Record updated successfully!',
-        updatedRecord
-      });
-  
+        // Find the existing record by recordId
+        const existingRecord = await Record.findOne({ id: recordId });
+
+        if (!existingRecord) {
+            return res.status(404).json({ message: 'Record not found!' });
+        }
+
+        const uploadPath = path.join(__dirname, `../../cdn/${recordId}`);
+
+        // Ensure the upload directory exists
+        if (!fs.existsSync(uploadPath)) {
+            return res.status(500).json({ message: 'Directory for record does not exist!' });
+        }
+
+        // Create updateData object with only the fields passed in the request body
+        const updateData = {};
+
+       
+        if (req.body.farmerName) updateData.farmerName = req.body.farmerName;
+        if (req.body.farmerMobile) updateData.farmerMobile = req.body.farmerMobile;
+        if (req.body.farmerEmail) updateData.farmerEmail = req.body.farmerEmail;
+        if (req.body.buyerName) updateData.buyerName = req.body.buyerName;
+        if (req.body.khasraNumber) updateData.khasraNumber = req.body.khasraNumber;
+        if (req.body.villageName) updateData.villageName = req.body.villageName;
+       
+        if (req.body.dateOfRegistration) updateData.dateOfRegistration = req.body.dateOfRegistration;
+        if (req.body.plotNumber) updateData.plotNumber = req.body.plotNumber;
+
+        updateData.lastUpdateBy = req.body.userId;
+        updateData.lastUpdateDate = formatDate(new Date());
+        updateData.uploadDate = formatDate(new Date());
+
+        // Handle file updates if they exist
+        if (req.files['registry_papers']) {
+            const registryPaper = req.files['registry_papers'][0];
+            const registryFileName = `registry_papers${path.extname(registryPaper.originalname)}`;
+            fs.writeFileSync(path.join(uploadPath, registryFileName), registryPaper.buffer);
+            updateData.registry_papers = `/cdn/${recordId}/${registryFileName}`;
+        }
+
+        if (req.files['other_docs']) {
+            const otherDoc = req.files['other_docs'][0];
+            const otherFileName = `other_docs${path.extname(otherDoc.originalname)}`;
+            fs.writeFileSync(path.join(uploadPath, otherFileName), otherDoc.buffer);
+            updateData.other_docs = `/cdn/${recordId}/${otherFileName}`;
+        }
+
+        // Update only the fields that are passed, others remain unchanged
+        const updatedRecord = await Record.findOneAndUpdate({ id: recordId }, { $set: updateData }, { new: true });
+
+        if (!updatedRecord) {
+            return res.status(404).json({ message: 'Record not found for update!' });
+        }
+
+        res.status(200).json({
+            message: 'Record updated successfully!',
+            updatedRecord
+        });
+
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Failed to update record', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Failed to update record', error: error.message });
     }
-  });
+});
 
 
 
@@ -356,10 +422,8 @@ router.get('/api/records/doc', async (req, res) => {
 
 
 
-
-
-
-
+// search api 
+router.get('/api/v1/admin/search', Search);
 
 
 

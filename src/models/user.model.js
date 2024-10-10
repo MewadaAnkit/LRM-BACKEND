@@ -11,7 +11,6 @@ const userSchema = new Schema({
   mobile: { type: String},
   city: { type: String},
   state: { type: String },
-  village:{type:String},
   role:{type:String},
   active: { type: Boolean, default: true },
   date_created: { type: String},
