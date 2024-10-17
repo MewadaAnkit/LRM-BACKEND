@@ -13,6 +13,8 @@ const userSchema = new Schema({
   state: { type: String },
   role:{type:String},
   active: { type: Boolean, default: true },
+  canDelete: { type: Boolean, default: false },
+  canUpdate: { type: Boolean, default: false },
   date_created: { type: String},
 });
 

@@ -99,19 +99,47 @@ const getFiles = async(req,res)=>{
     }
 }
 
+const UserById = async(req,res)=>{
+    const { id } = req.query;
+
+    try {
+      const user = await User.findOne({id:id});
+  
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+  
+      res.status(200).json(user);
+    } catch (error) {
+      
+      res.status(500).json({ message: 'Server error', error });
+    }
+}
 
 
 
 
 
+const getMetrics = async (req, res) => {
+    const {id} = req.query
+    try {
+         
+        const totalDocs = await Record.countDocuments({uploadedBy:id});
+        const recentDocs = await Record.countDocuments({ createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)  } , uploadedBy:id });
+      
 
-
-
-
+        res.json({ totalDocs, recentDocs });
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ message: 'Error fetching metrics', error });
+    }
+};
 
 
 
 
 module.exports  = {
-      getFiles
+      getFiles,
+      UserById,
+      getMetrics
 }

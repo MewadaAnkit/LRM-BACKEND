@@ -1,6 +1,6 @@
-const User  = require('../models/user.model')
-const Record  = require('../models/record.model')
-
+const User = require('../models/user.model')
+const Record = require('../models/record.model')
+const Admin = require('../models/record.model')
 const formatDate = (date) => {
     const yyyy = date.getFullYear();
     const mm = String(date.getMonth() + 1).padStart(2, '0');
@@ -9,7 +9,7 @@ const formatDate = (date) => {
     const min = String(date.getMinutes()).padStart(2, '0');
     const ss = String(date.getSeconds()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
-  };
+};
 
 
 
@@ -29,14 +29,14 @@ const UserRegister = async (req, res) => {
             return res.status(400).json({ message: 'User already exists with this mobile.' });
         }
 
-       
-        const lastUser = await User.findOne().sort({ id: -1 });  
-        let newId = 'UR001';  
+
+        const lastUser = await User.findOne().sort({ id: -1 });
+        let newId = 'UR001';
         if (lastUser && lastUser.id) {
-            
+
             const lastIdNumber = parseInt(lastUser.id.replace('UR', ''));
             const nextIdNumber = lastIdNumber + 1;
-      
+
             newId = 'UR' + nextIdNumber.toString().padStart(3, '0');  // Ensure it's always 3 digits
         }
 
@@ -48,14 +48,14 @@ const UserRegister = async (req, res) => {
             id: newId,
             username,
             email,
-            password:password,
+            password: password,
             firstname,
             lastname,
             mobile,
             city,
             state,
             village,
-            date_created:formatDate(new Date()),
+            date_created: formatDate(new Date()),
             role: "legal_team"
         });
 
@@ -72,27 +72,28 @@ const UserRegister = async (req, res) => {
 
 
 // get All employes aur users 
-const  GetAllEmploye = async(req,res)=>{
-    try{
-        const emp = await User.find({active:true});
-      if(!emp){
-         return res.status(401).json({message:"Data not found"})
-      }
+const GetAllEmploye = async (req, res) => {
+    try {
+        const emp = await User.find({ active: true });
+        if (!emp) {
+            return res.status(401).json({ message: "Data not found" })
+        }
 
-        res.status(200).json({message:"Employee Found ",status:200 , Data:emp })
+        res.status(200).json({ message: "Employee Found ", status: 200, Data: emp })
 
-    }catch(error){
+    } catch (error) {
         console.log(error)
-        res.status(500).json({Error:"Internal Server Error" })
+        res.status(500).json({ Error: "Internal Server Error" })
     }
 }
 
 
 // delete user 
-const DeletUR = async(req,res)=>{
+const DeletUR = async (req, res) => {
     try {
-        const userId = req.params.id;
-        const deletedUser = await User.findOneAndDelete({ id: userId });
+        const userId = req.query.id;
+        console.log(userId)
+        const deletedUser = await User.findOneAndDelete({ _id: userId });
 
         if (!deletedUser) {
             return res.status(404).json({ message: 'User not found!' });
@@ -107,14 +108,14 @@ const DeletUR = async(req,res)=>{
 
 
 // Deactive UR
-const Deactivate = async(req,res)=>{
+const Deactivate = async (req, res) => {
     try {
         const userId = req.params.id;
         // const { active } = req.body;  // Pass the new active status in the request body
 
         const updatedUser = await User.findOneAndUpdate(
-            { id: userId }, 
-            { active:false },  // Update the 'active' field
+            { id: userId },
+            { active: false },  // Update the 'active' field
             { new: true }  // Return the updated document
         );
 
@@ -136,14 +137,14 @@ const Deactivate = async(req,res)=>{
 
 
 // Reactive UR
-const Reactivate = async(req,res)=>{
+const Reactivate = async (req, res) => {
     try {
         const userId = req.params.id;
         // const { active } = req.body;  // Pass the new active status in the request body
 
         const updatedUser = await User.findOneAndUpdate(
-            { id: userId }, 
-            { active:true },  // Update the 'active' field
+            { id: userId },
+            { active: true },  // Update the 'active' field
             { new: true }  // Return the updated document
         );
 
@@ -166,15 +167,15 @@ const Reactivate = async(req,res)=>{
 // User Metrics 
 const getMetrics = async (req, res) => {
     try {
-      const totalDocs = await Record.countDocuments();
-      const recentDocs = await Record.countDocuments({ createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } });
-      const totalUsers = await User.countDocuments();
-  
-      res.json({ totalDocs, recentDocs, totalUsers });
+        const totalDocs = await Record.countDocuments();
+        const recentDocs = await Record.countDocuments({ createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } });
+        const totalUsers = await User.countDocuments();
+
+        res.json({ totalDocs, recentDocs, totalUsers });
     } catch (error) {
-      res.status(500).json({ message: 'Error fetching metrics', error });
+        res.status(500).json({ message: 'Error fetching metrics', error });
     }
-  };
+};
 
 
 
@@ -182,22 +183,22 @@ const getMetrics = async (req, res) => {
 // delete records 
 const deleteRecord = async (req, res) => {
     try {
-        const { id } = req.params; 
+        const { id } = req.query;
 
-        
+
         const deletedRecord = await Record.findByIdAndDelete(id);
 
         if (!deletedRecord) {
             return res.status(404).json({ message: 'Record not found' });
         }
 
-      
+
         return res.status(200).json({
             message: 'Record deleted successfully',
             data: deletedRecord
         });
     } catch (error) {
-       
+
         return res.status(500).json({
             message: 'An error occurred while deleting the record',
             error: error.message
@@ -208,41 +209,126 @@ const deleteRecord = async (req, res) => {
 
 
 
+// give user permission 
+const deletPermision = async(req,res)=>{
+    const {id} = req.query;
+
+    try {
+      // Find the user by ID
+      const user = await User.findOne({id:id});
+      
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+  
+      // Toggle the canDelete field
+      user.canDelete = !user.canDelete;
+  
+      // Save the updated user
+      await user.save();
+  
+      res.status(200).json({
+        message: user.canDelete ? 'Delete permission granted' : 'Delete permission revoked',
+        canDelete: user.canDelete,
+        success:true
+      });
+      
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Server error' });
+    }
+}
+
+// give user permission 
+const  editPermision = async(req,res)=>{
+    const {id} = req.query;
+
+    try {
+      // Find the user by ID
+      const user = await User.findOne({id:id});
+      
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+  
+      // Toggle the canDelete field
+      user.canUpdate = !user.canUpdate;
+  
+      // Save the updated user
+      await user.save();
+  
+      res.status(200).json({
+        message: user.canUpdate ? 'Update permission granted' : 'Update permission revoked',
+        canUpdate: user.canUpdate,
+        success:true
+      });
+      
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Server error' });
+    }
+}
 
 
 
 
-
-const Search = async(req,res)=>{
+const Search = async (req, res) => {
     try {
         const { searchQuery } = req.query;
-    
-   
+
+
         if (!searchQuery) {
-          return res.status(200).json([]);
+            return res.status(200).json([]);
         }
-    
-       
-        const regex = new RegExp(searchQuery, 'i'); 
-       
+
+
+        const regex = new RegExp(searchQuery, 'i');
+
         const query = {
-          $or: [
-            { farmerName: regex },
-            { khasraNumber: regex },
-            { villageName: regex },
-            { farmerMobile: regex },
-            { plotNumber: regex }
-          ]
+            $or: [
+                { farmerName: regex },
+                { khasraNumber: regex },
+                { villageName: regex },
+                { farmerMobile: regex },
+                { plotNumber: regex }
+            ]
         };
-    
-       
+
+
         const records = await Record.find(query);
-    
-      
+
+
         res.status(200).json(records);
-      } catch (error) {
+    } catch (error) {
         res.status(500).json({ message: 'Error searching documents', error });
-      }
+    }
+}
+
+
+const CheckUser = async (req, res) => {
+    try {
+        const user = Admin.findByIdfindById(req.id).exec();
+
+        const {
+            _id,
+            username,
+            email,
+            role,
+
+        } = user;
+
+        const userInfo = {
+            _id,
+            username,
+            email,
+            role,
+
+        };
+
+        res.status(200).json({ success: true, user: userInfo });
+    } catch (error) {
+        res.status(500).json({ message: 'Internal server error', error });
+    }
 }
 
 
@@ -254,7 +340,4 @@ const Search = async(req,res)=>{
 
 
 
-
-
-
-module.exports = {Search}
+module.exports = { Search , CheckUser, deleteRecord , GetAllEmploye , getMetrics , deletPermision , editPermision , DeletUR}

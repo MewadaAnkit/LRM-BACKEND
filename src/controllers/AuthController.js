@@ -14,7 +14,7 @@ const formatDate = (date) => {
 
 const UserRegister = async (req, res) => {
     try {
-        const { username, email, password, firstname, lastname, mobile, city, state, village } = req.body;
+        const { username, email, password, firstname, lastname, mobile, city, state, } = req.body;
 
         // Check if the user already exists
         const existingUser = await User.findOne({ email });
@@ -51,16 +51,16 @@ const UserRegister = async (req, res) => {
             mobile,
             city,
             state,
-            village,
             date_created:formatDate(new Date()),
-            role: "user"
+            role: "user",
+            active:true
         });
 
         // Save the user to the database
         await newUser.save();
 
         // Send response
-        res.status(201).json({ message: 'User registered successfully!', userId: newUser.id });
+        res.status(201).json({ message: 'User registered successfully!', newUser:newUser });
     } catch (error) {
         console.error('Error during registration:', error);
         res.status(500).json({ message: 'Error registering user. Please try again later.' });
@@ -148,7 +148,7 @@ const UserLogin = async (req, res) => {
         // Prepare response data
         const userdata = {
             token: token,
-            userId: user1._id,
+            _id: user1._id,
             id: user1.id,
             role: user1.role,
             username: user1.username
