@@ -200,7 +200,7 @@ router.get('/api/records/detail', async (req, res) => {
   //   uploadedBy = await Admin.find({id:records.uploadedBy})
   //  } 
 
-    console.log(uploadedBy , "uploadedBy ")
+    // console.log(uploadedBy , "uploadedBy ")
     const filePaths = records.map(record => ({
       _id : record._id,
       recordId: record.id,
