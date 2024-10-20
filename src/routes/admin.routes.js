@@ -200,7 +200,7 @@ router.get('/api/records/detail', async (req, res) => {
   //   uploadedBy = await Admin.find({id:records.uploadedBy})
   //  } 
 
-    console.log(uploadedBy , "uploadedBy ")
+    // console.log(uploadedBy , "uploadedBy ")
     const filePaths = records.map(record => ({
       _id : record._id,
       recordId: record.id,
@@ -246,7 +246,7 @@ router.get('/api/records/doc', async (req, res) => {
       }
 
       // Define the base URL for the CDN
-      const baseUrl = 'http://localhost:8000';
+      const baseUrl = 'https://lrm-backend.onrender.com';
 
     
       const filePaths = records.map(record => {

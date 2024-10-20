@@ -11,10 +11,9 @@ const bodyParser = require('body-parser')
 const path = require('path')
 //Middlewares
 app.use(cors({
-    origin :['http://localhost:3000',"*"],
-    credentials : true
-}))
-
+  origin: "*",
+    credentials: true,
+}));
 app.use('/cdn', express.static(path.join(__dirname, 'cdn')));
 app.use(express.json());
 app.use(express.urlencoded({extended:true}))
